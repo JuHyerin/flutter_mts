@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
+import 'package:flutter_mts/providers/stock_api.dart';
 
-class HomeSceren extends StatelessWidget {
+class HomeScreen extends StatelessWidget {
+
   @override
   Widget build(BuildContext context) {
+    StockApi().getAccessToken();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('MTS'),
