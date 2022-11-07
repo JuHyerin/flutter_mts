@@ -46,4 +46,22 @@ class StockApi {
     );
     return '';
   }
+
+  /* 실시간 토큰 발급 */
+  Future<String> getSocketAccessToken() async {
+    const String url = '/oauth2/Approval';
+    final params = {
+      'grant_type': 'client_credentials',
+      'appkey': appKey,
+      'appsecret': secretKey
+    };
+    final response = await http.post(
+        buildHttpUri(url),
+        body: jsonEncode(params)
+    );
+    final Map<String, dynamic> body = jsonDecode(response.body);
+    final String approvalKey = body['approval_key'];
+
+    return approvalKey;
+  }
 }
