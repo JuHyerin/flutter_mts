@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+// import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class StockSocket {
@@ -16,11 +17,27 @@ class StockSocket {
   Uri buildSocketUri(String url) => Uri.parse('$socketServiceUrl');
 
   void addChannel(String trId) {
-    channelMap[trId] = WebSocketChannel.connect(buildSocketUri(trId));
+    try{
+      WebSocketChannel socket = WebSocketChannel.connect(buildSocketUri(trId));
+
+      /* screen 에서 StreamBuilder로 Handler 추가하는 방법 몰라서 일단 여기에 추가 */
+      socket.stream.listen((event) => print('[$trId] data>> ' + event.toString()),
+          onError: (error) => print('[$trId] error>> '+error.toString()),
+          onDone: () => print('====== ${trId} onDone ===== ')
+      );
+      channelMap[trId] = socket;
+    } catch (e) {
+      print(e.toString());
+    }
   }
 
   void addData(String urlKey, Object data) {
-    channelMap[urlKey]!.sink.add(jsonEncode(data));
+    try{
+      channelMap[urlKey]!.sink.add(jsonEncode(data));
+    } catch(e) {
+      print(e.toString());
+    }
+
   }
 
   List<MapEntry<String, WebSocketChannel>> mapToList() {

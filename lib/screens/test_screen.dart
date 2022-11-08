@@ -48,7 +48,30 @@ class StockStreamWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
-    return StreamBuilder(
+    /*
+    * Channel connect 후 바로 listen 해서 StreamBuilder로 listen 하면 에러 발생
+    * (Flutter : Bad state: Stream has already been listened to)
+    * */
+    return ElevatedButton(
+        onPressed: () {
+          socket.sink.add(jsonEncode({
+          "header": {
+            "content-type": "utf-8",
+            "approval_key": "93fba692-6041-4e19-9939-07bdae320979",
+            "custtype": "P",
+            "tr_type": "1"
+          },
+          "body": {
+            "input": {
+            "tr_id": "H0STASP0",
+            "tr_key": trId
+            }
+          }
+          }));
+        },
+        child: Text('add')
+    );
+    /*return StreamBuilder(
       stream: socket.stream,
       builder: (context, snapshot) {
         return Center(
@@ -56,11 +79,11 @@ class StockStreamWidget extends StatelessWidget {
             children: [
               Text(
                 '${snapshot.data}'
-                /*snapshot.hasData
+                *//*snapshot.hasData
                   ? '${snapshot.data}'[0] == '0' || '${snapshot.data}'[0] == '1'
                     ? '${snapshot.data}'
                     : jsonDecode(snapshot.data)["header"]
-                  : ''*/
+                  : ''*//*
               ),
               ElevatedButton(
                   onPressed: () {
@@ -86,7 +109,7 @@ class StockStreamWidget extends StatelessWidget {
           ),
         );
       },
-    );
+    );*/
   }
 
 }
