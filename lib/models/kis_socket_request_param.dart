@@ -1,5 +1,3 @@
-import 'package:http/http.dart';
-
 abstract class Parameter {
    Map<String,dynamic> toJson();
 }
@@ -19,8 +17,8 @@ class KisSocketRequestHeader implements Parameter{
       return {
          "approval_key": approvalKey,
          "custtype": custType,
-         "tr_type": trType,
-         "content-type	": "utf-8"
+         "tr_type": '$trType',
+         "content-type": "utf-8"
       };
    }
 }
@@ -36,8 +34,10 @@ class KisSocketRequestBody implements Parameter {
    @override
    Map<String, dynamic> toJson() {
       return {
-         "tr_id": trId,
-         "tr_key": trKey
+         "input": {
+            "tr_id": trId,
+            "tr_key": trKey
+         }
       };
    }
 
