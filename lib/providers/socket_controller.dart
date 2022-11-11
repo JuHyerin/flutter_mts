@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:flutter_mts/models/kis_socket_request_param.dart';
+import 'package:flutter_mts/store/token_controller.dart';
+import 'package:get/get.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 String serverUrl = 'ws://ops.koreainvestment.com:31000/tryitout/';
@@ -7,11 +9,14 @@ String serverUrl = 'ws://ops.koreainvestment.com:31000/tryitout/';
 class SocketController {
   late final String serviceCd;
   late Map<String, WebSocketChannel> channelMap = {};
+  late String socketAccessToken;
 
   SocketController({
     required this.serviceCd,
     required List<String> keys,
   }) {
+    TokenController controller = Get.find<TokenController>();
+    socketAccessToken = controller.socketAccessToken!;
     for(var key in keys){
       addChannel(key);
     }
@@ -22,7 +27,7 @@ class SocketController {
   Parameter buildParams(String trKey) {
     return KisSocketRequestParam(
       header: KisSocketRequestHeader(
-        approvalKey: '93fba692-6041-4e19-9939-07bdae320979',
+        approvalKey: socketAccessToken,
         custType: 'P',
         trType: 1
       ),

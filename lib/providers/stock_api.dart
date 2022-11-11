@@ -53,13 +53,14 @@ class StockApi {
     final params = {
       'grant_type': 'client_credentials',
       'appkey': appKey,
-      'appsecret': secretKey
+      'secretkey': secretKey
     };
     final response = await http.post(
         buildHttpUri(url),
         body: jsonEncode(params)
     );
     final Map<String, dynamic> body = jsonDecode(response.body);
+    print('[StockApi] body>> $body');
     final String approvalKey = body['approval_key'];
 
     return approvalKey;

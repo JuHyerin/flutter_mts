@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_mts/providers/stock_api.dart';
 import 'package:flutter_mts/screens/controller_test_screen.dart';
+import 'package:flutter_mts/store/token_controller.dart';
+import 'package:get/get.dart';
 
 Future<void> main() async {
   await dotenv.load(fileName: '.env');
-  runApp(const MyApp());
+  StockApi().getSocketAccessToken().then((value) {
+    Get.put(TokenController(socketAccessToken: value));
+    runApp(const MyApp());
+  });
+
 }
 
 class MyApp extends StatelessWidget {
