@@ -1,30 +1,37 @@
 import 'dart:convert';
 import 'package:flutter_mts/models/kis_socket_request_param.dart';
+import 'package:flutter_mts/models/kis_socket_response.dart';
+import 'package:flutter_mts/store/stock_data_controller.dart';
 import 'package:flutter_mts/store/token_controller.dart';
 import 'package:get/get.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-String serverUrl = 'ws://ops.koreainvestment.com:31000/tryitout/';
-
+/*
+* 서비스 별로 instance 생성 (serviceCd)
+* 종목코드마다 Socket 생성하여 Map<종목코드, Socket>으로 관리 (channelMap)
+* tag 사용하여 GetX Store 에 실시간 데이터 저장 (tag: serviceCd_trKey)
+* */
 class SocketController {
+  final String serverUrl = 'ws://ops.koreainvestment.com:31000/tryitout/';
   late final String serviceCd;
-  late Map<String, WebSocketChannel> channelMap = {};
+  late Map<String, WebSocketChannel> channelMap = {}; // key: 종목코드(trKey)
   late String socketAccessToken;
 
   SocketController({
     required this.serviceCd,
-    required List<String> keys,
+    required List<String> keys
   }) {
     TokenController controller = Get.find<TokenController>();
     socketAccessToken = controller.socketAccessToken!;
     for(var key in keys){
-      addChannel(key);
+      addChannel(key); // 종목코드 별 socket 생성 후, data 전송
+      // addStore(key);
     }
   }
 
-  Uri buildSocketUri() => Uri.parse('$serverUrl$serviceCd');
+  Uri _buildSocketUri() => Uri.parse('$serverUrl$serviceCd');
 
-  Parameter buildParams(String trKey) {
+  Parameter _buildParams(String trKey) {
     return KisSocketRequestParam(
       header: KisSocketRequestHeader(
         approvalKey: socketAccessToken,
@@ -35,14 +42,34 @@ class SocketController {
     );
   }
 
-  void addChannel(String key) {
-    WebSocketChannel channel = WebSocketChannel.connect(buildSocketUri());
+  void addChannel(String key) { // socket channel 생성 > 구독 > store 추가 > socket 요청
+    WebSocketChannel channel = WebSocketChannel.connect(_buildSocketUri());
+    channel.stream.listen(
+      (event) => updateDataStore(key, event) // onData: Stream 에 데이터(event) 들어올 때마다 실행
+    );
     channelMap[key] = channel;
-    addData(key);
+    addStore(key);
+    sendData(key);
   }
 
-  void addData(String key){
-    channelMap[key]!.sink.add(jsonEncode(buildParams(key).toJson()));
+  void sendData(String key){ // Socket 에 데이터 요청 -> Stream 으로 데이터 응답됨
+    channelMap[key]!.sink.add(jsonEncode(_buildParams(key).toJson()));
+  }
+
+  void addStore(String key) { // Store 생성
+    Get.put(StockDataController(), tag: '${serviceCd}_$key');
+  }
+
+  void updateDataStore(String key, dynamic event) { // response 파싱하여 실시간 데이터일 경우에만 Store update
+    String tag = '${serviceCd}_$key';
+    print('update GetX :: $tag');
+    final StockDataController controller = Get.find<StockDataController>(tag: tag);
+    if(event[0] == '0' || event[0] == '1') { // 실시간 데이터
+      String newData = KisSocketResponse.parse(event).data;
+      controller.updateData(newData);
+    } else {
+      print('[SocketResponse] $event');
+    }
   }
 
   List<MapEntry<String, WebSocketChannel>> mapToList() {
