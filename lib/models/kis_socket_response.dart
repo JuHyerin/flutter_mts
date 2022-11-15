@@ -25,56 +25,52 @@ class KisStockData {
 class KisStockPurchase extends KisStockData{
   late String MKSC_SHRN_ISCD; // 유가증권 단축 종목코드
   late String BSOP_HOUR; // 영업 시간
-  late String HOUR_CLS_CODE; // 시간 구분 코드
-  late List<String> askPriceList; // 매도호가 (주식 판매하고자 하는 금액)
-  /*late int askPrice1;
-  late int askPrice2;
-  late int askPrice3;
-  late int askPrice4;
-  late int askPrice5;
-  late int askPrice6;
-  late int askPrice7;
-  late int askPrice8;
-  late int askPrice9;
-  late int askPrice10;*/
-  late List<String> bidPriceList; // 매수호가 (주식 구매하고자 하는 금액)
-  /*late int bidPrice1;
-  late int bidPrice2;
-  late int bidPrice3;
-  late int bidPrice4;
-  late int bidPrice5;
-  late int bidPrice6;
-  late int bidPrice7;
-  late int bidPrice8;
-  late int bidPrice9;
-  late int bidPrice10;*/
+  late String HOUR_CLOSE_CODE; // 시간 구분 코드
+  late List<String> askPriceList; // 매도호가 (주식 판매하고자 하는 금액), ASKP
+  late List<String> bidPriceList; // 매수호가 (주식 구매하고자 하는 금액), BIDP
+  late List<String> askRestQuantityList; // 매수호가 잔량, ASKP_RSQN
+  late List<String> bidRestQuantityList; //매도호가 잔량, BIDP_RSQN
+  late String totalAskRestQuantity; // 총 매수호가 잔량, TOTAL_ASKP_RSQN
+  late String totalBidRestQuantity; // 총 매도호가 잔향, TOTAL_BIDP_RSQN
+  late String overtimeTotalAskRestQuantity; // 시간외 총 매도호가 잔량, OVTM_TOTAL_ASKP_RSQN
+  late String overtimeTotalBidRestQuantity; // 시간외 총 매수호가 잔량, OVTM_TOTAL_BIDP_RSQN
+  late String anticipatedCnPrice; // 예상 체결가, ANTC_CNPR
+  late String anticipatedCnQuantity; // 예상 체결량, ANTC_CNQN
+  late String anticipatedVolume; // 예상 거래량, ANTC_VOL
+  late String anticipatedCnVersus; // 예상 체결 대비	,ANTC_CNTG_VRSS
+  late String anticipatedCnVersusSign; // 예상 체결 대비 부호, ANTC_CNTG_VRSS_SIGN
+  late String anticipatedCnPreDayContrastRatio; // 예상 체결 전일 대비율, ANTC_CNTG_PRDY_CTRT
+  late String accumulateVolume; // 누적 거래량,	ACML_VOL
+  late String totalAskRestQuantityIcDc;// 총 매도호가 잔량 증감,	TOTAL_ASKP_RSQN_ICDC
+  late String totalBidRestQuantityIcDc; // 총 매수호가 잔량 증감,	TOTAL_BIDP_RSQN_ICDC
+  late String overtimeTotalAskIcDc; // 시간외 총 매도호가 증감,	OVTM_TOTAL_ASKP_ICDC
+  late String overtimeTotalBidIcDc; // 시간외 총 매수호가 증감,	OVTM_TOTAL_BIDP_ICDC
+  late String stockDealCloseCode; // 주식 매매 구분 코드, STCK_DEAL_CLS_CODE
 
   KisStockPurchase.parse(String stringData) {
-    List<dynamic> list = stringData.split('^');
+    List<String> list = stringData.split('^');
     MKSC_SHRN_ISCD = list[0];
     BSOP_HOUR = list[1];
-    HOUR_CLS_CODE = list[2];
-    askPriceList = list.sublist(3, 13) as List<String>;
-    bidPriceList = list.sublist(13, 23) as List<String>;
-    /*askPrice1 = list[3];
-    askPrice2 = list[4];
-    askPrice3 = list[5];
-    askPrice4 = list[6];
-    askPrice5 = list[7];
-    askPrice6 = list[8];
-    askPrice7 = list[9];
-    askPrice8 = list[10];
-    askPrice9 = list[11];
-    askPrice10 = list[12];
-    bidPrice1 = list[13];
-    bidPrice2 = list[14];
-    bidPrice3 = list[15];
-    bidPrice4 = list[16];
-    bidPrice5 = list[17];
-    bidPrice6 = list[18];
-    bidPrice7 = list[19];
-    bidPrice8 = list[20];
-    bidPrice9 = list[21];
-    bidPrice10 = list[22];*/
+    HOUR_CLOSE_CODE = list[2];
+    askPriceList = list.sublist(3, 13);
+    bidPriceList = list.sublist(13, 23);
+    askRestQuantityList = list.sublist(23,33);
+    bidRestQuantityList = list.sublist(33,43);
+    totalAskRestQuantity = list[43];
+    totalBidRestQuantity = list[44];
+    overtimeTotalAskRestQuantity = list[45];
+    overtimeTotalBidRestQuantity = list[46];
+    anticipatedCnPrice = list[47];
+    anticipatedCnQuantity = list[48];
+    anticipatedVolume = list[49];
+    anticipatedCnVersus = list[50];
+    anticipatedCnVersusSign = list[51];
+    anticipatedCnPreDayContrastRatio = list[52];
+    accumulateVolume = list[53];
+    totalAskRestQuantityIcDc = list[54];
+    totalBidRestQuantityIcDc = list[55];
+    overtimeTotalAskIcDc = list[56];
+    overtimeTotalBidIcDc = list[57];
+    stockDealCloseCode = list[58];
   }
 }
