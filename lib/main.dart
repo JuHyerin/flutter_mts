@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_mts/providers/stock_api.dart';
 import 'package:flutter_mts/screens/controller_test_screen.dart';
+import 'package:flutter_mts/screens/hoka_screen.dart';
 import 'package:flutter_mts/store/token_controller.dart';
 import 'package:get/get.dart';
 
@@ -34,7 +35,7 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         colorScheme: const ColorScheme.dark()
       ),
-      home: ControllerTestScreen()
+      home: HokaScreen()
     );
   }
 }

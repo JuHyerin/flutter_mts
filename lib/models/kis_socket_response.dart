@@ -72,5 +72,24 @@ class KisStockPurchase extends KisStockData{
     overtimeTotalAskIcDc = list[56];
     overtimeTotalBidIcDc = list[57];
     stockDealCloseCode = list[58];
+    print('>>>>>>${anticipatedCnPrice}, ${anticipatedCnVersus}, ${anticipatedCnPreDayContrastRatio}, ${accumulateVolume}');
   }
+
+
+  List<MapEntry<String, String>> getAskPriceRestQuantityMap() { // Map<askPrice, askRestQuantity>
+    List<MapEntry<String, String>> list = [];
+    for (var i = 0 ; i < 10 ; i++) {
+      list.add(MapEntry(askPriceList[i], askRestQuantityList[i]));
+    }
+    return list;
+  }
+
+  List<MapEntry<String, String>> getBidPriceRestQuantityMap() { // Map<bidPrice, bidRestQuantity>
+    List<MapEntry<String, String>> list = [];
+    for (var i = 0 ; i < 10 ; i++) {
+      list.add(MapEntry(bidPriceList[i], bidRestQuantityList[i]));
+    }
+    return list;
+  }
+
 }
