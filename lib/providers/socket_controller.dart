@@ -42,13 +42,18 @@ class SocketController {
     );
   }
 
-  void addChannel(String key) { // socket channel 생성 > 구독 > store 추가 > socket 요청
-    WebSocketChannel channel = WebSocketChannel.connect(_buildSocketUri());
+  Future<void> addChannel(String key) async { // socket channel 생성 > 구독 > store 추가 > socket 요청
+    addStore(key); // socket 연결되는 동안 screen 에 쓰이는 GetX 가 null 값임을 방지하기 위해 store 먼저 추가
+    WebSocketChannel channel = await WebSocketChannel.connect(_buildSocketUri());
     channel.stream.listen(
-      (event) => updateDataStore(key, event) // onData: Stream 에 데이터(event) 들어올 때마다 실행
+      (event) {
+        // print('[${key}_socket_data] $event');
+        updateDataStore(key, event);
+      }, // onData: Stream 에 데이터(event) 들어올 때마다 실행
+      // onError: (e) => print('[${key}_socket_error] ${e.toString()}'),
+      // onDone: () => print('[${key}_socket_done]'),
     );
     channelMap[key] = channel;
-    addStore(key);
     sendData(key);
   }
 
@@ -62,7 +67,6 @@ class SocketController {
 
   void updateDataStore(String key, dynamic event) { // response 파싱하여 실시간 데이터일 경우에만 Store update
     String tag = '${serviceCd}_$key';
-    print('update GetX :: $tag');
     final StockDataController controller = Get.find<StockDataController>(tag: tag);
     if(event[0] == '0' || event[0] == '1') { // 실시간 데이터
       String newData = KisSocketResponse.parse(event).data;
