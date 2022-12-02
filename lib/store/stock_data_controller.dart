@@ -6,7 +6,10 @@ import 'package:get/get.dart';
 * */
 class StockDataController extends GetxController {
   RxString stockData = ''.obs;
-
+  StockDataController();
+  StockDataController.forTest(String data) {
+    stockData = data.obs;
+  }
   void updateData(String newData) {
   /*PINGPONG 이 아닐 때만 update 하기 위한 GetX Event*/
     stockData(newData);

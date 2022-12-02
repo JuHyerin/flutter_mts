@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_mts/models/kis_socket_response.dart';
 import 'package:flutter_mts/providers/socket_controller.dart';
 import 'package:flutter_mts/store/stock_data_controller.dart';
+import 'package:flutter_mts/utils/formatter_number.dart';
 import 'package:get/get.dart';
 
 class HokaScreen extends StatefulWidget {
-  final String trKey = '005930';
-  final String serviceCd = 'H0STASP0';
+  final String trKey = '005930'; // 대상 주식 종목 코드
+  final String hokaServiceCd = 'H0STASP0'; // 실시간 주식 호가 서비스 코드
+  final String cntgServiceCd = 'H0STCNT0'; // 실시간 주식 체결 서비스 코드
 
   @override
   _HokaScreenState createState() => _HokaScreenState();
@@ -14,17 +16,28 @@ class HokaScreen extends StatefulWidget {
 
 class _HokaScreenState extends State<HokaScreen> {
   final ScrollController _scrollController = ScrollController();
-  bool isAppbarOpen = true;
-  late SocketController socketController;
+  bool isAppbarOpen = true; // Appbar 확장 여부
+
+  /* GetX Controller */
+  late SocketController hokaSocketController; // 실시간 호가
+  late SocketController cntgSocketController; // 실시간 체결가
+
+  /* GetX tag */
+  late final String hokaTag;
+  late final String cntgTag;
 
   @override
   void initState() {
     super.initState();
+    hokaTag = '${widget.hokaServiceCd}_${widget.trKey}';
+    cntgTag = '${widget.cntgServiceCd}_${widget.trKey}';
     initScrollController();
+
+    /* 장마감 시, 주석처리 */
     initSocketController();
   }
 
-  void initScrollController () {
+  void initScrollController () { // scroll offset 에 따른 appbar 확장 상태 제어
     _scrollController.addListener(() {
       if(_scrollController.offset <= 0.5) {
         setState(() {
@@ -38,10 +51,14 @@ class _HokaScreenState extends State<HokaScreen> {
     });
   }
 
-  void initSocketController () {
-    socketController = SocketController(
-      serviceCd: widget.serviceCd,
+  void initSocketController () { // data 를 받아오고 저장할 socket, store 초기화
+    hokaSocketController = SocketController(
+      serviceCd: widget.hokaServiceCd,
       keys: [widget.trKey],
+    );
+    cntgSocketController = SocketController(
+      serviceCd: widget.cntgServiceCd,
+      keys: [widget.trKey]
     );
   }
 
@@ -65,10 +82,10 @@ class _HokaScreenState extends State<HokaScreen> {
                 snap: false,
                 expandedHeight: 140.0,
                 collapsedHeight: 85.0,
-                flexibleSpace: HokaAppbar(isOpen: isAppbarOpen),
+                flexibleSpace: HokaAppbar(isOpen: isAppbarOpen, hokaTag: hokaTag, cntgTag: cntgTag ),
               ),
               SliverToBoxAdapter(
-                child: HokaList(tag: '${widget.serviceCd}_${widget.trKey}'),
+                child: HokaList(hokaTag: hokaTag, cntgTag: cntgTag,),
               )
             ],
           )
@@ -77,8 +94,15 @@ class _HokaScreenState extends State<HokaScreen> {
   }
 }
 class HokaAppbar extends StatefulWidget {
-  bool isOpen;
-  HokaAppbar({required this.isOpen});
+  final bool isOpen;
+  final String hokaTag;
+  final String cntgTag;
+
+  HokaAppbar({
+    required this.isOpen,
+    required this.hokaTag,
+    required this.cntgTag
+  });
 
   @override
   _HokaAppbarState createState () => _HokaAppbarState();
@@ -86,227 +110,164 @@ class HokaAppbar extends StatefulWidget {
 
 class _HokaAppbarState extends State<HokaAppbar> {
 
+  /*
+  * TODO
+  * utils 분리
+  * enum 처리
+  * */
+  Color getColorByCode(String data) {
+    switch (data){
+      case '1': // 상한
+      case '2': // 상승
+        return Colors.red;
+      case '4': // 하한
+      case '5': // 하락
+        return Colors.blue;
+      case '3': // 보합
+      default:
+        return Colors.white;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    if(widget.isOpen) {
-      return FlexibleSpaceBar(
-        expandedTitleScale: 1,
-        title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Padding(padding: EdgeInsets.all(5)),
-              Text('종목코드 | 코스피', style: TextStyle(fontSize: 14)),
-              Text('61,650', style: TextStyle(fontSize: 32),),
-              Text('-1,100', style: TextStyle(fontSize: 14)),
-              Text('-1,75%', style: TextStyle(fontSize: 14)),
-              Text('11,616,567 주 (?? %)', style: TextStyle(fontSize: 14))
-            ]
-        ),
-      );
-    } else {
-      return FlexibleSpaceBar(
-        expandedTitleScale: 1,
-        title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Padding(padding: EdgeInsets.all(5)),
-              Text('종목코드 | 코스피', style: TextStyle(fontSize: 14)),
-              Text('61,650', style: TextStyle(fontSize: 32),),
-            ]
-        ),
-      );
-    }
+    return Obx(() {
+      var hokaController = Get.find<StockDataController>(tag: widget.hokaTag);
+      var cntgController = Get.find<StockDataController>(tag: widget.cntgTag);
+      if (hokaController.stockData.value == '' || cntgController.stockData.value == '') {
+        return const CircularProgressIndicator();
+      } else {
+        KisStockPurchase hoka = KisStockPurchase.parse(hokaController.stockData.value);
+        KisStockCntg cntg = KisStockCntg.parse(cntgController.stockData.value);
+        final textColor = getColorByCode(cntg.prevDayVersusSign);
+
+        if (widget.isOpen) { // 확장 Appbar
+          return FlexibleSpaceBar(
+            expandedTitleScale: 1,
+            title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(padding: EdgeInsets.all(5)),
+                  Text('${hoka.MKSC_SHRN_ISCD} | 코스피', style: const TextStyle(fontSize: 14)),
+                  Text(formatCurrency(cntg.stockCurPrice), style: TextStyle(fontSize: 32, color: textColor),),
+                  Text(formatCurrency(formatAbsoluteValue(cntg.prevDayVersus)), style: TextStyle(fontSize: 14, color: textColor)),
+                  Text('${formatAbsoluteValue(cntg.prevDayContrastRatio)}%', style: TextStyle(fontSize: 14, color: textColor)),
+                  Text('${hoka.accumulateVolume} 주', style: const TextStyle(fontSize: 14))
+                ]
+            ),
+          );
+        } else { // 축소 Appbar
+          return FlexibleSpaceBar(
+            expandedTitleScale: 1,
+            title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(padding: EdgeInsets.all(5)),
+                  Text('${hoka.MKSC_SHRN_ISCD} | 코스피', style: const TextStyle(fontSize: 14)),
+                  Text(formatCurrency(cntg.stockCurPrice), style: TextStyle(fontSize: 32, color: textColor),),
+                ]
+            ),
+          );
+        }
+      }
+    });
   }
 }
 
 class HokaList extends StatelessWidget {
-  final String tag;
-  HokaList({required this.tag});
+  final double listItemHeight = 40.0;
+  late final String hokaTag;
+  late final String cntgTag;
+  HokaList({required this.hokaTag, required this.cntgTag});
 
   @override
   Widget build(BuildContext context) {
-    // return GetX<StockDataController>(
-    //   tag: tag,
-    //   builder: (controller) {
-        // if (controller.stockData == '') {
-        //   return CircularProgressIndicator();
-        // } else {
-        //   KisStockPurchase data = KisStockPurchase.parse(controller.stockData.value);
-          return  Column(
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                      flex: 2,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.max,
+    return Obx(() {
+      var hokaController = Get.find<StockDataController>(tag: hokaTag);
+      var cntgController = Get.find<StockDataController>(tag: cntgTag);
 
-                        children: /*data.getAskPriceRestQuantityMap().map((e) {
+      if (hokaController.stockData.value == '' || cntgController.stockData.value == '') {
+        return const CircularProgressIndicator();
+      } else {
+        KisStockPurchase hoka = KisStockPurchase.parse(hokaController.stockData.value);
+        KisStockCntg cntg = KisStockCntg.parse(cntgController.stockData.value);
+        return Column(
+          children: [
+            /* Ask Price */
+            Row(
+              children: [
+                Expanded(
+                    flex: 2,
+                    child: Column(
+                      children: hoka.getAskPriceRestQuantityMap().map((e) {
+                        return Row(
+                          children: [
+                            Expanded(flex:1, child: Container(color: Colors.blue, height: listItemHeight, child: Text(e.value),)),
+                            Expanded(
+                              flex:1,
+                              child:
+                              e.key == cntg.stockCurPrice
+                                  ? Container(
+                                height: listItemHeight,
+                                decoration: BoxDecoration(border: Border.all(color: Colors.white, width: 3)),
+                                child: Text(formatCurrency(e.key)),
+                              )
+                                  : Container(
+                                height: listItemHeight,
+                                child: Text(formatCurrency(e.key)),
+                              ),
+                            ),
+                          ],
+                        );
+                      }).toList(),
+                    )
+                ),
+                Expanded(
+                    flex: 1,
+                    child: Container(color: Colors.grey, child: Text('container'),)
+                )
+              ],
+            ),
+            /* Bid Price */
+            Row(
+              children: [
+                Expanded(
+                    flex: 1,
+                    child: Container(color: Colors.grey, child: Text('container'),)
+                ),
+                Expanded(
+                    flex: 2,
+                    child: Column(
+                        mainAxisSize: MainAxisSize.max,
+                        children: hoka.getBidPriceRestQuantityMap().map((e) {
                           return Row(
                             children: [
-                              Expanded(flex:1, child: Container(color: Colors.blue, child: Text(e.value), height: 50,)),
-                              Expanded(flex:1, child: Text(e.key)),
+                              Expanded(
+                                flex:1,
+                                child:
+                                e.key == cntg.stockCurPrice
+                                    ? Container(
+                                  height: listItemHeight,
+                                  decoration: BoxDecoration(border: Border.all(color: Colors.white, width: 3)),
+                                  child: Text(formatCurrency(e.key)),
+                                )
+                                    : Container(
+                                  height: listItemHeight,
+                                  child: Text(formatCurrency(e.key)),
+                                ),
+                              ),
+                              Expanded(flex:1, child: Container(color: Colors.red, height: listItemHeight, child: Text(e.value))),
                             ],
                           );
-                        }).toList(),*/
-                        [
-                          Row(
-                            children: [
-                              Expanded(flex:1, child: Container(color: Colors.blue, child: Text('rest1'), height: 50,)),
-                              Expanded(flex:1, child: Text('Ask1')),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Expanded(flex:1, child: Container(color: Colors.blue, child: Text('rest2'), height: 50)),
-                              Expanded(flex:1, child: Text('Ask2')),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Expanded(flex:1, child: Container(color: Colors.blue, child: Text('rest3'), height: 50)),
-                              Expanded(flex:1, child: Text('Ask3')),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Expanded(flex:1, child: Container(color: Colors.blue, child: Text('rest4'), height: 50)),
-                              Expanded(flex:1, child: Text('Ask4')),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Expanded(flex:1, child: Container(color: Colors.blue, child: Text('rest5'), height: 50)),
-                              Expanded(flex:1, child: Text('Ask5')),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Expanded(flex:1, child: Container(color: Colors.blue, child: Text('rest6'), height: 50,)),
-                              Expanded(flex:1, child: Text('Ask6')),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Expanded(flex:1, child: Container(color: Colors.blue, child: Text('rest7'), height: 50)),
-                              Expanded(flex:1, child: Text('Ask7')),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Expanded(flex:1, child: Container(color: Colors.blue, child: Text('rest8'), height: 50)),
-                              Expanded(flex:1, child: Text('Ask8')),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Expanded(flex:1, child: Container(color: Colors.blue, child: Text('rest9'), height: 50)),
-                              Expanded(flex:1, child: Text('Ask9')),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Expanded(flex:1, child: Container(color: Colors.blue, child: Text('rest10'), height: 50)),
-                              Expanded(flex:1, child: Text('Ask10')),
-                            ],
-                          ),
-                        ],
-                      )
-                  ),
-                  Expanded(
-                      flex: 1,
-                      child: Container(
-                        color: Colors.grey,
-                        child: Text('container'),
-                      )
-                  )
-                ],
-              ),
-              Row(
-                children: [
-                  Expanded(
-                      flex: 1,
-                      child: Container(
-                        color: Colors.grey,
-                        child: Text('container'),
-                      )
-                  ),
-                  Expanded(
-                      flex: 2,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(flex:1, child: Text('Bid1')),
-                              Expanded(flex:1, child: Container(color: Colors.red, child: Text('rest1'), height: 50)),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Expanded(flex:1, child: Text('Bid2')),
-                              Expanded(flex:1, child: Container(color: Colors.red, child: Text('rest2'), height: 50)),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Expanded(flex:1, child: Text('Bid3')),
-                              Expanded(flex:1, child: Container(color: Colors.red, child: Text('rest3'), height: 50)),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Expanded(flex:1, child: Text('Bid4')),
-                              Expanded(flex:1, child: Container(color: Colors.red, child: Text('rest4'), height: 50)),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Expanded(flex:1, child: Text('Bid5')),
-                              Expanded(flex:1, child: Container(color: Colors.red, child: Text('rest5'), height: 50)),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Expanded(flex:1, child: Text('Bid6')),
-                              Expanded(flex:1, child: Container(color: Colors.red, child: Text('rest6'), height: 50)),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Expanded(flex:1, child: Text('Bid7')),
-                              Expanded(flex:1, child: Container(color: Colors.red, child: Text('rest7'), height: 50)),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Expanded(flex:1, child: Text('Bid8')),
-                              Expanded(flex:1, child: Container(color: Colors.red, child: Text('rest8'), height: 50)),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Expanded(flex:1, child: Text('Bid9')),
-                              Expanded(flex:1, child: Container(color: Colors.red, child: Text('rest9'), height: 50)),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Expanded(flex:1, child: Text('Bid10')),
-                              Expanded(flex:1, child: Container(color: Colors.red, child: Text('rest10'), height: 50)),
-                            ],
-                          ),
-                        ],
-                      )
-                  ),
-                ],
-              ),
-            ],
-          );
-        // }
-
-      // },
-    // );
+                        }).toList()
+                    )
+                ),
+              ],
+            ),
+          ],
+        );
+      }
+    });
   }
 }
 
