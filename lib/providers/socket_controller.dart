@@ -24,8 +24,7 @@ class SocketController {
     TokenController controller = Get.find<TokenController>();
     socketAccessToken = controller.socketAccessToken!;
     for(var key in keys){
-      addChannel(key); // 종목코드 별 socket 생성 후, data 전송
-      // addStore(key);
+      addChannel(key); // 종목코드 별 socket 및 store 생성 후, data 전송
     }
   }
 
@@ -43,6 +42,10 @@ class SocketController {
   }
 
   Future<void> addChannel(String key) async { // socket channel 생성 > 구독 > store 추가 > socket 요청
+    if(channelMap.keys.contains(key)) { // 이미 있는 종목코드 바로 return
+      print('[${serviceCd}_SocketController] already exist $key');
+      return;
+    }
     addStore(key); // socket 연결되는 동안 screen 에 쓰이는 GetX 가 null 값임을 방지하기 위해 store 먼저 추가
     WebSocketChannel channel = await WebSocketChannel.connect(_buildSocketUri());
     channel.stream.listen(

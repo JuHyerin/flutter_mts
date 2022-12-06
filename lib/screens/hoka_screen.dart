@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_mts/models/kis_socket_response.dart';
 import 'package:flutter_mts/providers/socket_controller.dart';
 import 'package:flutter_mts/store/stock_data_controller.dart';
@@ -6,7 +7,7 @@ import 'package:flutter_mts/utils/formatter_number.dart';
 import 'package:get/get.dart';
 
 class HokaScreen extends StatefulWidget {
-  final String trKey = '005930'; // 대상 주식 종목 코드
+  // final String trKey = '005930'; // 대상 주식 종목 코드
   final String hokaServiceCd = 'H0STASP0'; // 실시간 주식 호가 서비스 코드
   final String cntgServiceCd = 'H0STCNT0'; // 실시간 주식 체결 서비스 코드
 
@@ -15,6 +16,7 @@ class HokaScreen extends StatefulWidget {
 }
 
 class _HokaScreenState extends State<HokaScreen> {
+  String trKey = '005930'; // 대상 주식 종목 코드
   final ScrollController _scrollController = ScrollController();
   bool isAppbarOpen = true; // Appbar 확장 여부
 
@@ -23,14 +25,13 @@ class _HokaScreenState extends State<HokaScreen> {
   late SocketController cntgSocketController; // 실시간 체결가
 
   /* GetX tag */
-  late final String hokaTag;
-  late final String cntgTag;
+  late String hokaTag;
+  late String cntgTag;
 
   @override
   void initState() {
     super.initState();
-    hokaTag = '${widget.hokaServiceCd}_${widget.trKey}';
-    cntgTag = '${widget.cntgServiceCd}_${widget.trKey}';
+    initTag();
     initScrollController();
 
     /* 장마감 시, 주석처리 */
@@ -54,12 +55,17 @@ class _HokaScreenState extends State<HokaScreen> {
   void initSocketController () { // data 를 받아오고 저장할 socket, store 초기화
     hokaSocketController = SocketController(
       serviceCd: widget.hokaServiceCd,
-      keys: [widget.trKey],
+      keys: [trKey],
     );
     cntgSocketController = SocketController(
       serviceCd: widget.cntgServiceCd,
-      keys: [widget.trKey]
+      keys: [trKey]
     );
+  }
+
+  void initTag () { // store 에서 데이터 받아올 tag 초기화
+    hokaTag = '${widget.hokaServiceCd}_$trKey';
+    cntgTag = '${widget.cntgServiceCd}_$trKey';
   }
 
   @override
@@ -82,7 +88,20 @@ class _HokaScreenState extends State<HokaScreen> {
                 snap: false,
                 expandedHeight: 140.0,
                 collapsedHeight: 85.0,
-                flexibleSpace: HokaAppbar(isOpen: isAppbarOpen, hokaTag: hokaTag, cntgTag: cntgTag ),
+                flexibleSpace: HokaAppbar(
+                  isOpen: isAppbarOpen,
+                  hokaTag: hokaTag,
+                  cntgTag: cntgTag,
+                  trKey: trKey,
+                  changeTrKey: (String value) {
+                    setState(() {
+                      trKey = value;
+                    });
+                    initTag();
+                    hokaSocketController.addChannel(trKey);
+                    cntgSocketController.addChannel(trKey);
+                  }
+                ),
               ),
               SliverToBoxAdapter(
                 child: HokaList(hokaTag: hokaTag, cntgTag: cntgTag,),
@@ -97,11 +116,15 @@ class HokaAppbar extends StatefulWidget {
   final bool isOpen;
   final String hokaTag;
   final String cntgTag;
+  final Function changeTrKey;
+  final String trKey;
 
   HokaAppbar({
     required this.isOpen,
     required this.hokaTag,
-    required this.cntgTag
+    required this.cntgTag,
+    required this.changeTrKey,
+    required this.trKey
   });
 
   @override
@@ -148,7 +171,29 @@ class _HokaAppbarState extends State<HokaAppbar> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Padding(padding: EdgeInsets.all(5)),
-                  Text('${hoka.MKSC_SHRN_ISCD} | 코스피', style: const TextStyle(fontSize: 14)),
+                  Row(
+                    children: [
+                      SizedBox(
+                          width: 100,
+                          child: TextField(
+                            inputFormatters: [LengthLimitingTextInputFormatter(6), FilteringTextInputFormatter.digitsOnly],
+                            decoration: InputDecoration(
+                              isDense: true,
+                              hintText: widget.trKey,
+                              icon: const Icon(Icons.search, size: 20,)
+                            ),
+                            style: const TextStyle(fontSize: 14),
+                            onSubmitted: (value) {
+                              setState(() {
+                                // 종목코드 -> socket channel map 추가, tag 변경
+                                widget.changeTrKey(value);
+                              });
+                            },
+                          )
+                      ),
+                      const Text('| 코스피', style: TextStyle(fontSize: 14)),
+                    ],
+                  ),
                   Text(formatCurrency(cntg.stockCurPrice), style: TextStyle(fontSize: 32, color: textColor),),
                   Text(formatCurrency(formatAbsoluteValue(cntg.prevDayVersus)), style: TextStyle(fontSize: 14, color: textColor)),
                   Text('${formatAbsoluteValue(cntg.prevDayContrastRatio)}%', style: TextStyle(fontSize: 14, color: textColor)),
@@ -176,8 +221,8 @@ class _HokaAppbarState extends State<HokaAppbar> {
 
 class HokaList extends StatelessWidget {
   final double listItemHeight = 40.0;
-  late final String hokaTag;
-  late final String cntgTag;
+  final String hokaTag;
+  final String cntgTag;
   HokaList({required this.hokaTag, required this.cntgTag});
 
   @override
