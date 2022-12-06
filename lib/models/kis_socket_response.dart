@@ -100,6 +100,8 @@ class KisStockCntg extends KisStockData {
   late String prevDayVersusSign; // 전일 대비 부호 ( 1:상한, 2:상승, 3:보합, 4:하한, 5:하락)
   late String prevDayVersus; // 전일 대비
   late String prevDayContrastRatio; // 전일 대비율
+  late String accumulateVolume; // 누적 거래량,	ACML_VOL
+
 
   KisStockCntg.parse(String stringData){
     List<String> list = stringData.split('^');
@@ -109,5 +111,6 @@ class KisStockCntg extends KisStockData {
     prevDayVersusSign = list[3];
     prevDayVersus = list[4];
     prevDayContrastRatio = list[5];
+    accumulateVolume = list[13];
   }
 }
