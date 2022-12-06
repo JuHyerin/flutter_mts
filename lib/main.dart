@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_mts/providers/stock_api.dart';
-import 'package:flutter_mts/screens/hoka_screen.dart';
-import 'package:flutter_mts/store/stock_data_controller.dart';
+import 'package:flutter_mts/screens/hoka/hoka_screen.dart';
 import 'package:flutter_mts/store/token_controller.dart';
 import 'package:get/get.dart';
 
@@ -21,7 +20,6 @@ Future<void> main() async {
 
     runApp(const MyApp());
   });
-
 }
 
 class MyApp extends StatelessWidget {
@@ -33,15 +31,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
         colorScheme: const ColorScheme.dark()
       ),
       home: HokaScreen()
