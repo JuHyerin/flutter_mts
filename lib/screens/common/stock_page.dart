@@ -13,9 +13,7 @@ class StockPage extends StatefulWidget {
 class _StockPageState extends State<StockPage> {
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: MediaQuery.of(context).size.height,
-      child: TabBarView(
+    return TabBarView(
           controller: widget.tabController,
           children: [
             HokaScreen(),
@@ -40,7 +38,7 @@ class _StockPageState extends State<StockPage> {
               ),
             ),
           ]
-      )
+
     );
   }
 

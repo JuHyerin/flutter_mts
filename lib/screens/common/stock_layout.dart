@@ -78,34 +78,41 @@ class _StockLayoutState extends State<StockLayout> with TickerProviderStateMixin
 
     return Scaffold(
       body: SafeArea(
-          child: CustomScrollView(
+          /*
+          * NestedScrollView
+          * 내부에 다른 스크롤 뷰를 중첩할 수 있는 스크롤 뷰로, 스크롤 위치가 본질적으로 연결되어 있음
+          * TabBar 를 포함한 SliverAppBar 와 scrollable 한 TabBarView 를 갖는 scrollable view 위젯에 주로 쓰임
+          * (SliverAppbar 의 스크롤과 TabBarView 의 스크롤이 따로 놀기 때문에 NestedScrollView 로 스크롤을 연결시킴)
+          * */
+          child: NestedScrollView(
             controller:  _scrollController,
-            slivers: <Widget> [
-              SliverAppBar(
-                floating: false,
-                pinned: true,
-                snap: false,
-                expandedHeight: 175.0,
-                collapsedHeight: 120.0,
-                flexibleSpace: StockAppbar(
-                    isOpen: isAppbarOpen,
-                    tabController: _tabController,
-                    cntgTag: cntgTag,
-                    trKey: trKey,
-                    changeTrKey: (String value) {
-                      setState(() {
-                        trKey = value;
-                      });
-                      initTag();
-                      cntgSocketController.addChannel(trKey);
-                    }
+            /* SliverAppBar with TabBar */
+            headerSliverBuilder: (context, innerBoxIsScrolled) {
+              return [
+                SliverAppBar(
+                  floating: false,
+                  pinned: true,
+                  snap: false,
+                  expandedHeight: 187.0,
+                  collapsedHeight: 120.0,
+                  flexibleSpace: StockAppbar(
+                      isOpen: isAppbarOpen,
+                      tabController: _tabController,
+                      cntgTag: cntgTag,
+                      trKey: trKey,
+                      changeTrKey: (String value) {
+                        setState(() {
+                          trKey = value;
+                        });
+                        initTag();
+                        cntgSocketController.addChannel(trKey);
+                      }
+                  ),
                 ),
-              ),
-              SliverToBoxAdapter(
-                /* Pages */
-                child: StockPage(tabController: _tabController),
-              )
-            ],
+              ];
+            },
+            /* Scrollable TabBarView */
+            body: StockPage(tabController: _tabController),
           )
       ),
     );
