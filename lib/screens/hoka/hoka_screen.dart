@@ -60,7 +60,9 @@ class _HokaScreenState extends State<HokaScreen> {
   @override
   Widget build(BuildContext context) {
 
-    return HokaList(hokaTag: hokaTag, cntgTag: cntgTag,);
+    return SingleChildScrollView(
+      child: HokaList(hokaTag: hokaTag, cntgTag: cntgTag,),
+    );
   }
 }
 
