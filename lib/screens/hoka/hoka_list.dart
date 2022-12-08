@@ -8,6 +8,7 @@ class HokaList extends StatelessWidget {
   final double listItemHeight = 40.0;
   final String hokaTag;
   final String cntgTag;
+
   HokaList({required this.hokaTag, required this.cntgTag});
 
   @override
@@ -54,7 +55,10 @@ class HokaList extends StatelessWidget {
                 ),
                 Expanded(
                     flex: 1,
-                    child: Container(color: Colors.grey, child: Text('container'),)
+                    child: SizedBox(
+                      height: listItemHeight * 10,
+                       child: Container(color: Colors.white10, child: const Text('container'),),
+                    )
                 )
               ],
             ),
@@ -63,7 +67,10 @@ class HokaList extends StatelessWidget {
               children: [
                 Expanded(
                     flex: 1,
-                    child: Container(color: Colors.grey, child: Text('container'),)
+                    child: SizedBox(
+                      height: listItemHeight * 10,
+                      child: Container(color: Colors.white10, child: const Text('container'),),
+                    )
                 ),
                 Expanded(
                     flex: 2,

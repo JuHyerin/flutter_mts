@@ -16,7 +16,6 @@ class _StockLayoutState extends State<StockLayout> with TickerProviderStateMixin
   String trKey = '005930'; // 대상 주식 종목 코드
   final ScrollController _scrollController = ScrollController();
   bool isAppbarOpen = true; // Appbar 확장 여부
-  late TabController _tabController;
 
   /* GetX Controller */
   late SocketController cntgSocketController; // 실시간 체결가
@@ -29,10 +28,9 @@ class _StockLayoutState extends State<StockLayout> with TickerProviderStateMixin
     super.initState();
     initTag();
     initScrollController();
-    initTabController();
 
     /* 장마감 시, 주석처리 */
-    // initSocketController();
+    initSocketController();
   }
 
   void initScrollController () { // scroll offset 에 따른 appbar 확장 상태 제어
@@ -47,13 +45,6 @@ class _StockLayoutState extends State<StockLayout> with TickerProviderStateMixin
         });
       }
     });
-  }
-
-  void initTabController () {
-    _tabController = TabController(
-      length: 3,
-      vsync: this,  //vsync에 this 형태로 전달해야 애니메이션이 정상 처리됨
-    );
   }
 
   void initSocketController () { // data 를 받아오고 저장할 socket, store 초기화
@@ -76,45 +67,47 @@ class _StockLayoutState extends State<StockLayout> with TickerProviderStateMixin
   @override
   Widget build(BuildContext context) {
 
-    return Scaffold(
-      body: SafeArea(
-          /*
+    return DefaultTabController(
+        length: 3,
+        child: Scaffold(
+          body: SafeArea(
+            /*
           * NestedScrollView
           * 내부에 다른 스크롤 뷰를 중첩할 수 있는 스크롤 뷰로, 스크롤 위치가 본질적으로 연결되어 있음
           * TabBar 를 포함한 SliverAppBar 와 scrollable 한 TabBarView 를 갖는 scrollable view 위젯에 주로 쓰임
           * (SliverAppbar 의 스크롤과 TabBarView 의 스크롤이 따로 놀기 때문에 NestedScrollView 로 스크롤을 연결시킴)
           * */
-          child: NestedScrollView(
-            controller:  _scrollController,
-            /* SliverAppBar with TabBar */
-            headerSliverBuilder: (context, innerBoxIsScrolled) {
-              return [
-                SliverAppBar(
-                  floating: false,
-                  pinned: true,
-                  snap: false,
-                  expandedHeight: 187.0,
-                  collapsedHeight: 120.0,
-                  flexibleSpace: StockAppbar(
-                      isOpen: isAppbarOpen,
-                      tabController: _tabController,
-                      cntgTag: cntgTag,
-                      trKey: trKey,
-                      changeTrKey: (String value) {
-                        setState(() {
-                          trKey = value;
-                        });
-                        initTag();
-                        cntgSocketController.addChannel(trKey);
-                      }
-                  ),
-                ),
-              ];
-            },
-            /* Scrollable TabBarView */
-            body: StockPage(tabController: _tabController),
-          )
-      ),
+              child: NestedScrollView(
+                controller:  _scrollController,
+                /* SliverAppBar with TabBar */
+                headerSliverBuilder: (context, innerBoxIsScrolled) {
+                  return [
+                    SliverAppBar(
+                      floating: false,
+                      pinned: true,
+                      snap: false,
+                      expandedHeight: 180.0,
+                      collapsedHeight: 120.0,
+                      flexibleSpace: StockAppbar(
+                          isOpen: isAppbarOpen,
+                          cntgTag: cntgTag,
+                          trKey: trKey,
+                          changeTrKey: (String value) {
+                            setState(() {
+                              trKey = value;
+                            });
+                            initTag();
+                            cntgSocketController.addChannel(trKey);
+                          }
+                      ),
+                    ),
+                  ];
+                },
+                /* Scrollable TabBarView */
+                body: StockPage(),
+              )
+          ),
+        )
     );
   }
 
