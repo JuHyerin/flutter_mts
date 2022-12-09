@@ -1,9 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_mts/models/kis_socket_request_param.dart';
 import 'package:flutter_mts/models/kis_socket_response.dart';
 import 'package:flutter_mts/store/stock_data_controller.dart';
 import 'package:flutter_mts/store/token_controller.dart';
 import 'package:get/get.dart';
+import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 /*
@@ -46,8 +49,20 @@ class SocketController {
       print('[${serviceCd}_SocketController] already exist $key');
       return;
     }
+
     addStore(key); // socket 연결되는 동안 screen 에 쓰이는 GetX 가 null 값임을 방지하기 위해 store 먼저 추가
-    WebSocketChannel channel = await WebSocketChannel.connect(_buildSocketUri());
+
+    WebSocketChannel channel;
+    Uri uri = _buildSocketUri();
+    if(kIsWeb) { // Web
+      channel = await WebSocketChannel.connect(uri);
+    } else {
+      if(Platform.isAndroid || Platform.isIOS) { // Native: IOWebSocketChannel 지원
+        channel = IOWebSocketChannel.connect(uri);
+      } else {
+        channel = await WebSocketChannel.connect(uri);
+      }
+    }
     channel.stream.listen(
       (event) {
         // print('[${key}_socket_data] $event');
