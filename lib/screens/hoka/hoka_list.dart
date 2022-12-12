@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mts/models/kis_socket_response.dart';
+import 'package:flutter_mts/screens/common/common_loading.dart';
 import 'package:flutter_mts/store/stock_data_controller.dart';
 import 'package:flutter_mts/utils/formatter_number.dart';
 import 'package:get/get.dart';
@@ -18,7 +19,7 @@ class HokaList extends StatelessWidget {
       var cntgController = Get.find<StockDataController>(tag: cntgTag);
 
       if (hokaController.stockData.value == '' || cntgController.stockData.value == '') {
-        return const CircularProgressIndicator();
+        return CommonLoading();
       } else {
         KisStockPurchase hoka = KisStockPurchase.parse(hokaController.stockData.value);
         KisStockCntg cntg = KisStockCntg.parse(cntgController.stockData.value);

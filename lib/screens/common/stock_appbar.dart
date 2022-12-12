@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_mts/models/kis_socket_response.dart';
+import 'package:flutter_mts/screens/common/common_loading.dart';
 import 'package:flutter_mts/screens/common/stock_tab.dart';
 import 'package:flutter_mts/store/stock_data_controller.dart';
 import 'package:flutter_mts/utils/formatter_number.dart';
@@ -63,7 +64,7 @@ class _StockAppbarState extends State<StockAppbar> {
       tag: widget.cntgTag,
       builder: (controller) {
         if (controller.stockData.value == '') {
-          return const CircularProgressIndicator();
+          return CommonLoading();
         } else {
           KisStockCntg cntg = KisStockCntg.parse(controller.stockData.value);
           final textColor = getColorByCode(cntg.prevDayVersusSign);
