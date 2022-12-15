@@ -69,6 +69,7 @@ class _StockLayoutState extends State<StockLayout> with TickerProviderStateMixin
 
     return DefaultTabController(
       length: 3,
+      initialIndex: 1,
       child: SafeArea(
         child: Scaffold(
           /*

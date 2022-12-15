@@ -21,6 +21,12 @@ class StockApi {
 
   final String domesticServiceUri = '/uapi/domestic-stock';
 
+  StockApi();
+
+  StockApi.init() {
+    Get.put(TokenController()); // 앱 시작할 때 TokenController 초기화
+  }
+
   Uri buildHttpUri(String url) => Uri.parse('$httpServiceUrl$url');
   Uri buildHttpGetUri(String url, Map<String, dynamic>? params) =>
       Uri.https('openapivts.koreainvestment.com:29443', url, params);
@@ -40,8 +46,8 @@ class StockApi {
     final Map<String, dynamic> body = jsonDecode(response.body);
     final String accessToken = body['access_token'];
 
-    print('accessToken>> $accessToken');
-    Get.put<TokenController>(TokenController(oauthToken: accessToken));
+    final TokenController controller = Get.find<TokenController>();
+    controller.updateOauthToken(accessToken);
   }
 
   /* POST API에 사용되는 hashkey 발급 */
@@ -58,7 +64,7 @@ class StockApi {
   }
 
   /* 실시간 토큰 발급 */
-  Future<String> getSocketAccessToken() async {
+  Future<void> getSocketAccessToken() async {
     const String url = '/oauth2/Approval';
     final params = {
       'grant_type': 'client_credentials',
@@ -70,10 +76,10 @@ class StockApi {
         body: jsonEncode(params)
     );
     final Map<String, dynamic> body = jsonDecode(response.body);
-    print('[StockApi] body>> $body');
     final String approvalKey = body['approval_key'];
 
-    return approvalKey;
+    final TokenController controller = Get.find<TokenController>();
+    controller.updateSoketAccessToken(approvalKey);
   }
 
   /* 국내주식기간별시세(일/주/월/년) */

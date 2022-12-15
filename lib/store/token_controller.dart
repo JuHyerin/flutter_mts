@@ -5,4 +5,15 @@ class TokenController extends GetxController {
   late String? oauthToken; // 접근 토큰
 
   TokenController({this.socketAccessToken, this.oauthToken});
+
+  void updateSoketAccessToken(String val) {
+    socketAccessToken = val;
+    update();
+  }
+
+  void updateOauthToken(String val) {
+    oauthToken = val;
+    update();
+  }
+
 }
