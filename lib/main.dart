@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_mts/providers/stock_api.dart';
+import 'package:flutter_mts/screens/chart/chart_screen.dart';
 import 'package:flutter_mts/screens/common/stock_layout.dart';
 import 'package:flutter_mts/store/stock_data_controller.dart';
 import 'package:flutter_mts/store/token_controller.dart';
@@ -8,7 +9,9 @@ import 'package:get/get.dart';
 
 Future<void> main() async {
   await dotenv.load(fileName: '.env');
-  StockApi().getSocketAccessToken().then((value) {
+  final StockApi api = StockApi();
+  await api.getOauthToken();
+  api.getSocketAccessToken().then((value) {
     Get.put(TokenController(socketAccessToken: value));
 
     /* 장마감 후, 사용하는 test data */
@@ -31,9 +34,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: const ColorScheme.dark()
-      ),
+      theme: ThemeData(colorScheme: const ColorScheme.dark()),
       home: StockLayout()
     );
   }
