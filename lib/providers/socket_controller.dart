@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_mts/interface/api/api_request_data.dart';
 import 'package:flutter_mts/models/kis_socket_request_param.dart';
 import 'package:flutter_mts/models/kis_socket_response.dart';
 import 'package:flutter_mts/store/stock_data_controller.dart';
@@ -33,7 +34,7 @@ class SocketController {
 
   Uri _buildSocketUri() => Uri.parse('$serverUrl$serviceCd');
 
-  Parameter _buildParams(String trKey) {
+  ApiRequestData _buildParams(String trKey) {
     return KisSocketRequestParam(
       header: KisSocketRequestHeader(
         approvalKey: socketAccessToken,

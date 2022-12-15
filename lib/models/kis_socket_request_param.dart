@@ -1,7 +1,6 @@
-abstract class Parameter {
-   Map<String,dynamic> toJson();
-}
-class KisSocketRequestHeader implements Parameter{
+import 'package:flutter_mts/interface/api/api_request_data.dart';
+
+class KisSocketRequestHeader implements ApiRequestData{
    late final String approvalKey;
    late final String custType;
    late final int trType;
@@ -22,7 +21,7 @@ class KisSocketRequestHeader implements Parameter{
       };
    }
 }
-class KisSocketRequestBody implements Parameter {
+class KisSocketRequestBody implements ApiRequestData {
    late final String trId;
    late final String trKey;
 
@@ -42,7 +41,7 @@ class KisSocketRequestBody implements Parameter {
    }
 
 }
-class KisSocketRequestParam implements Parameter {
+class KisSocketRequestParam implements ApiRequestData {
    late final KisSocketRequestHeader header;
    late final KisSocketRequestBody body;
 
