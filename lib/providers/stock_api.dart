@@ -89,7 +89,7 @@ class StockApi {
     final paramData = KisChartPriceReq( // sample data
         FID_COND_MRKT_DIV_CODE: 'J',
         FID_INPUT_ISCD: '005930',
-        FID_INPUT_DATE_1: '20221201',
+        FID_INPUT_DATE_1: '20221001',
         FID_INPUT_DATE_2: '20221215',
         FID_PERIOD_DIV_CODE: 'D',
         FID_ORG_ADJ_PRC: '1'
